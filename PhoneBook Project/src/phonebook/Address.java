@@ -283,7 +283,7 @@ public class Address {
 			System.out.println("isValidAddress - address zip code information is invalid.");
 			return false;
 		}
-		if (this.zipPlus4 != 0 && String.format("%04d", this.zipPlus4).length() == 4) {
+		if (this.zipPlus4 != 0 && String.format("%04d", this.zipPlus4).length() != 4) {
 			System.out.println("isValidAddress - address zip code +4 information is invalid.");
 			return false;
 		}

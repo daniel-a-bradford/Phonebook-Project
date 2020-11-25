@@ -1,5 +1,8 @@
 package phonebook;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 public class Person extends Address {
 	private long personID;
 	private String firstName = "";
@@ -337,14 +340,13 @@ public class Person extends Address {
 					super.toString() + " ";
 		String phoneString = Long.toString(this.personPhone);
 		if (phoneString.length() < 10) {
-			phoneString = String.format("%09d", personPhone);
-			phoneString = "0" + phoneString;
+			DecimalFormat paddedPhone = new DecimalFormat("0000000000");
+			phoneString = paddedPhone.format(this.personPhone);
 		} 
 		if (phoneString.length() == 10) {
-			phoneString = "(" + phoneString.subSequence(0, 2) + ") " + phoneString.subSequence(3, 5) + "-" + phoneString.subSequence(6, 9);
-		} else {
-			outputString += "\nPhone number " + phoneString;
-		}
+			phoneString = "(" + phoneString.subSequence(0, 3) + ") " + phoneString.subSequence(3, 6) + "-" + phoneString.subSequence(6, 10);
+		} 
+		outputString += " Phone " + phoneString;
 		return outputString;
 	}
 

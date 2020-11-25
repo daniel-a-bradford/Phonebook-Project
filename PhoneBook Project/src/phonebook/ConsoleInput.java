@@ -9,59 +9,91 @@ import java.util.Scanner;
  * Parameters in curly brackets {} are optional
  * Methods contained -
  * 	Boolean getInputBoolean(String prompt) - prompt is a Yes or No question.
+ * 	Integer getInputChoice(String numberedListOfOptions, int numberOfOptions)
  * 	Integer getInputInt({String userPrompt})
- * 	Integer getInputInt(String userPrompt, int numDigits) - numDigits specifies the required number of digits for the user input
- * 	int[] getInputIntArray(int numberOfInputs, {String userPrompt}) 
+ * 	Integer getInputInt({String userPrompt}, int numDigits) - numDigits specifies the required number of digits for the user input
+ * 	int[] getInputInts(int numberOfInputs, {String userPrompt}) 
+ * 	boolean isValidInt(String, {int fromThis}, {int toThis}, {boolean silent}) 
  * 	Long getInputLong({String userPrompt})
  * 	Long getInputLong(String userPrompt, int numDigits) - numDigits specifies the required number of digits for the user input
- * 	long[] getInputLongArray(int numberOfInputs, {String userPrompt}) 
+ * 	long[] getInputLongs(int numberOfInputs, {String userPrompt}) 
+ *  boolean isValidLong(String, {int fromThis}, {int toThis}, {boolean silent})
  *  double getInputDouble({String userPrompt})
- * 	double[] getInputDoubleArray(int numberOfInputs, {String userPrompt}) 
+ * 	double[] getInputDoubles(int numberOfInputs, {String userPrompt}) 
+ * 	boolean isValidDouble(String, {int fromThis}, {int toThis}, {boolean silent})
  *  Character getInputChar({String userPrompt})
+ *  Character getInputChar({String userPrompt}, {fromThis}, {toThis}
  *  Character getInputLetter({String userPrompt})
+ *  boolean isValidChar(String, {int fromThis}, {int toThis}, {boolean silent})
  *  String getInputString({String userPrompt})
- *  String[] getInputStringArray(int numberOfInputs, {String userPrompt})
+ *  String getInputString(String userPrompt, int numChars) - numDigits specifies the required number of digits for the user input
+ *  String[] getInputStrings(int numberOfInputs, {String userPrompt})
  *  String getInputState(String userPrompt)
+ *  boolean isValidString(String, {boolean silent})
  */
+
 public class ConsoleInput {
 	
-	/** Prompt the user to answer 1 for yes or 2 for no in response to the prompt message.
-	 * If the user presses the Cancel button, return null. */
-	public static Boolean getInputBoolean(String prompt) {
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		// Prompt the user for an input in the console and capture the user input as a string
-		System.out.println(prompt + "\nEnter 1 for yes and 2 for no: ");
-		Scanner input = new Scanner(System.in);
-		int userInt = 0;
-		while (badInput) {
-			// Try to interpret the user input string as an integer and assign it to userInt
-			try {
-				// If parseInt does not throw an exception, the user's input is an integer.
-				userInt = input.nextInt();
-				if (userInt == 1 || userInt == 2) {
-					badInput = false;
-				} else {
-					System.out.println("Your input was not a valid choice please try again.");
-					badInput = true;
-				}
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
-			}
-			input.nextLine();
+	/** method addCancelOption provides a class-wide standard option to add to the user prompt
+	 *  to allow the user to cancel the operation rather than entering an input.
+	 *  Currently the character to enter is ~
+	 * @param prompt
+	 * @return
+	 */
+	private static String addCancelOption(String prompt) {
+		return prompt + "\nEnter ~ to exit";
+	}
+	
+	/** method userCancelled checks to see if the user entered class-wide standard cancel character.
+	 *  If so, it returns true, otherwise false.
+	 * @param input
+	 * @return
+	 */
+	private static boolean userCancelled(String input) {
+		if (input.trim().contentEquals("~")) {
+			return true;
 		}
-//		//input.close();
+		return false;
+	}
+	
+	/** Prompt the user to answer 1 for yes or 2 for no in response to the prompt message.
+	 * If the user presses the Cancel button, return null. 
+	 * @param userPrompt
+	 */
+	public static Boolean getInputBoolean(String userPrompt) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		int userInt = 0;
+		// Build the user prompt string with yes, no, and cancel options.
+		userPrompt += "\nEnter 1 for yes or 2 for no: " + addCancelOption("");
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+		// Continue the loop if the string is a valid integer in the range from 1 to 2.
+		// isValidInt will display applicable error messages.
+		} while (!isValidInt(inputString, 1, 2));
+		// User inputString has been validated so parse the string.
+		userInt = Integer.parseInt(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		if (userInt == 1) {
 			return true;
 		} 
 		return false;
 	}
 	
+	/** getInputChoice prompts the user to make a choice based on a numbered list of options from 1 
+	 * 	to numberOfOptions. If the user cancels, return null. 
+	 * @param numberedListOfOptions
+	 * @param numberOfOptions
+	 * @return
+	 */
 	public static Integer getInputChoice(String numberedListOfOptions, int numberOfOptions) {
 		boolean badInput = true;
 		Integer userSelected = null;
@@ -88,108 +120,134 @@ public class ConsoleInput {
 	 * Validate the input and ask again if the input is not valid.
 	 */
 	public static Integer getInputInt() {
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		int userInt = 0;
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		int userInt = 0;
+		// Build the user prompt string with cancel options.
+		String userPrompt = "Please enter an integer number: ";
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter an integer:");
-			// Try to interpret the user input string as an integer and assign it to userInt
-			try {
-				// If parseInt does not throw an exception, the user's input is an integer.
-				userInt = input.nextInt();
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidInt(inputString));
+		// User inputString has been validated so parse the string.
+		userInt = Integer.parseInt(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userInt;
 	}
 	
 	/** Prompt the user for a single integer input in the console. 
 	 * If userPrompt is blank or empty use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
+	 * @param userPrompt
 	 */
 	public static Integer getInputInt(String userPrompt) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		int userInt = 0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer number:";
 		}	
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		int userInt = 0;
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println(userPrompt); 
-			// Try to interpret the user input string as an integer and assign it to userInt
-			try {
-				// If parseInt does not throw an exception, the user's input is an integer.
-				userInt = input.nextInt();
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidInt(inputString));
+		// User inputString has been validated so parse the string.
+		userInt = Integer.parseInt(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userInt;
+	}
+	
+	/** Prompt the user for a single integer input with a specified number of digits using the console. 
+	 * Use the default user prompt.
+	 * Validate the input and ask again if the input is not valid.
+	 * @param numDigits
+	 */
+	public static Integer getInputInt(int numDigits) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		int userInt = 0;
+		String userPrompt = "Please enter an integer with " + numDigits + "digits:";
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+			if (inputString.length() != numDigits) {
+				System.out.println("Your input did not have " + numDigits + "digits.\n");
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidInt(inputString) && inputString.length() != numDigits);
+		// User inputString has been validated so parse the string.
+		userInt = Integer.parseInt(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userInt;
 	}
 	
 	/** Prompt the user for a single integer input with a specified number of digits using the console. 
 	 * If userPrompt is blank or empty use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
+	 * @param userPrompt
+	 * @param numDigits
 	 */
 	public static Integer getInputInt(String userPrompt, int numDigits) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		int userInt = 0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer with " + numDigits + "digits:";
 		}	
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		int userInt = 0;
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			// Try to interpret the user input string as an integer and assign it to userInt
-			try {
-				// If parseInt does not throw an exception, the user's input is an integer.
-				userInt = input.nextInt();
-				if (numberOfDigits(userInt) == numDigits) {
-					badInput = false;
-				} else {
-					// Advise the user the input is invalid and continue the loop
-					System.out.println("Your input did not have the correct number of digits. \n"
-							+ "Please enter a number with " + numDigits + " digits.");
-				}
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
+			if (inputString.length() != numDigits) {
+				System.out.println("Your input did not have " + numDigits + "digits.\n");
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidInt(inputString) && inputString.length() != numDigits);
+		// User inputString has been validated so parse the string.
+		userInt = Integer.parseInt(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userInt;
 	}
 	
@@ -209,445 +267,737 @@ public class ConsoleInput {
 	/** Prompt the user for a set of integers input in the console. Use the default user prompt for each input.
 	 * numberOfInputs parameter specifies how many inputs of this type are required.
 	 * Validate the input and ask again if the input is not valid.
+	 * @param numOfInputs
 	 */
-	public static int[] getInputInt(int numberOfInputs) {
+	public static int[] getInputInts(int numberOfInputs) {
 		int[] userInputInts = new int[numberOfInputs];
 		int arrayIndex = 0;
-		boolean badInput = true;
 		Scanner input = new Scanner(System.in);
-		// Display a prompt for the user to enter data. 
-		// Check input and if bad, advise the user and loop to prompt again until they provide proper input.
-		// Continue loop until the array is full of good inputs (i.e. no bad input or an arrayIndex less than its length.)
-		while (badInput || (arrayIndex < userInputInts.length)) {
+		String inputString = "";
+		boolean validInput = true;
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter integer #" + (arrayIndex+1) + " of " + numberOfInputs);
-			// Try to interpret the user input string as an integer and assign it to userInt
-			try {
-				userInputInts[arrayIndex] = input.nextInt();
+			String userPrompt = "Please enter integer #" + (arrayIndex+1) + " of " + numberOfInputs;
+			// Build the user prompt string with cancel options.
+			userPrompt = addCancelOption(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+			// Check if the inputString is a valid integer.
+			// isValidInt will display applicable error messages.
+			validInput = !isValidInt(inputString);
+			if (validInput) {
+				// User inputString has been validated so parse the string.
+				userInputInts[arrayIndex] = Integer.parseInt(inputString);
 				// Increment the index to the next element in the array.
 				arrayIndex++;
-				// If the code above did not throw an exception, the input is valid. Exit the loop if all is complete.
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
 			}
-			input.nextLine();
-		}
-		//input.close();
+		// Continue the loop if the string is a valid integer.
+		} while (!validInput || (arrayIndex < userInputInts.length));
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userInputInts;
 	}
 	
+	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @return
+	 */
+	public static boolean isValidInt(String inputString) {
+		int inputInt = 0;
+		// Try to interpret the user input string as an integer and assign it to userInt
+		try {
+			// If parseInt does not throw an exception, the user's input is an integer.
+			inputInt = Integer.parseInt(inputString);
+		} 
+		// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
+		catch (Exception NumberFormatException) {
+			System.out.println("Your input was not an integer. \n"
+					+ "Please enter a number without a decimal.\n");
+			return false;
+		}
+		return true;
+	}
+	
+	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidInt(String inputString, boolean silent) {
+		int inputInt = 0;
+		// Try to interpret the user input string as an integer and assign it to userInt
+		try {
+			// If parseInt does not throw an exception, the user's input is an integer.
+			inputInt = Integer.parseInt(inputString);
+		} 
+		// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
+		catch (Exception NumberFormatException) {
+			if (!silent) {
+				System.out.println("Your input was not an integer. \n"
+					+ "Please enter a number without a decimal.\n");
+			}
+			return false;
+		}
+		return true;
+	}
+	
+	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
+	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @return
+	 */
+	public static boolean isValidInt(String inputString, int fromThis, int toThis) {
+		int inputInt = 0;
+		if (isValidInt(inputString)) {
+			inputInt = Integer.parseInt(inputString);
+		}
+		if (inputInt >= fromThis && inputInt <= toThis) {
+			return true;
+		}
+		System.out.println("Your input was not between " + fromThis + " and " + toThis + ".\n");
+		return false;
+	}
+	
+	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
+	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidInt(String inputString, int fromThis, int toThis, boolean silent) {
+		int inputInt = 0;
+		if (isValidInt(inputString, silent)) {
+			inputInt = Integer.parseInt(inputString);
+		}
+		if (inputInt >= fromThis && inputInt <= toThis) {
+			return true;
+		}
+		if (!silent) {
+			System.out.println("Your input was not between " + fromThis + " and " + toThis + ".");
+		}
+		return false;
+	}
+	
 //Long
-//TODO Fix this to use the console
+	
 	/** Prompt the user for a single long integer input in the console. Use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
 	 */
 	public static Long getInputLong() {
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		long userLong = 0;
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		long userLong = 0L;
+		// Build the user prompt string with cancel options.
+		String userPrompt = "Please enter an integer number: ";
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter an integer number:");
-			// Try to interpret the user input string as a long integer and assign it to userLong
-			try {
-				// If Long.parseLong does not throw an exception, the user's input is a long integer.
-				userLong = input.nextLong();
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to a long integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
+		// Continue the loop if the string is a valid long integer.
+		// isValidLong will display applicable error messages.
+		} while (!isValidLong(inputString));
+		// User inputString has been validated so parse the string.
+		userLong = Long.parseLong(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userLong;
 	}
 	
-	/** Prompt the user for a single long integer input in the console. 
+	/** Prompt the user for a single integer input in the console. 
 	 * If userPrompt is blank or empty use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
 	 */
 	public static Long getInputLong(String userPrompt) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		long userLong = 0L;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer number:";
 		}	
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		long userLong = 0;
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			// Try to interpret the user input string as a long integer and assign it to userLong
-			try {
-				// If Long.parseLong does not throw an exception, the user's input is a long integer.
-				userLong = input.nextLong();
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to a long integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
+		// Continue the loop if the string is a valid integer.
+		// isValidLong will display applicable error messages.
+		} while (!isValidLong(inputString));
+		// User inputString has been validated so parse the string.
+		userLong = Long.parseLong(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userLong;
 	}
+	
 	/** Prompt the user for a single long integer input with a specified number of digits using the console. 
 	 * If userPrompt is blank or empty use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
 	 */
 	public static Long getInputLong(String userPrompt, int numDigits) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		long userLong = 0L;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer with " + numDigits + "digits:";
 		}	
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		long userLong = 0;
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
-			// Prompt the user for an input in the console
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			// Try to interpret the user input string as a long integer and assign it to userLong
-			try {
-				// If Long.parseLong does not throw an exception, the user's input is a long integer.
-				userLong = input.nextLong();
-				if (numberOfDigits(userLong) == numDigits) {
-					badInput = false;
-				} else {
-					// Advise the user the input is invalid and continue the loop
-					System.out.println("Your input did not have the correct number of digits. \n"
-							+ "Please enter a number with " + numDigits + " digits.");
-				}
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to a long integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
+			if (inputString.length() != numDigits) {
+				System.out.println("Your input did not have " + numDigits + "digits.\n");
+			}
+		// Continue the loop if the string is a valid long integer.
+		// isValidLong will display applicable error messages.
+		} while (!isValidLong(inputString) && inputString.length() != numDigits);
+		// User inputString has been validated so parse the string.
+		userLong = Long.parseLong(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userLong;
 	}
 	
-	/** Prompt the user for a set of long integers input in the console. Use the default user prompt for each input.
-	 * numberOfInputs parameter specifies how many inputs of this type are required.
-	 * Validate the input and ask again if the input is not valid.
-	 */
-	public static long[] getInputLong(int numberOfInputs) {
-		long[] userInputLongs = new long[numberOfInputs];
-		int arrayIndex = 0;
-		boolean badInput = true;
-		Scanner input = new Scanner(System.in);
-		// Display a prompt for the user to enter data. 
-		// Check input and if bad, advise the user and loop to prompt again until they provide proper input.
-		// Continue loop until the array is full of good inputs (i.e. no bad input or an arrayIndex less than its length.)
-		while (badInput || (arrayIndex < userInputLongs.length)) {
-			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter integer #" + (arrayIndex+1) + " of " + numberOfInputs);
-			// Try to interpret the user input string as a long integer and assign it to userInputLongs
-			try {
-				userInputLongs[arrayIndex] = input.nextLong();
-				// Increment the index to the next element in the array.
-				arrayIndex++;
-				// If the code above did not throw an exception, the input is valid. Exit the loop if all is complete.
-				badInput = false;
-			} 
-			// Long.parseLong will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
-			}
-			input.nextLine();
-		}
-		//input.close();
-		return userInputLongs;
-	}
-	
-	/** Prompt the user for a set of long integers input in the console. 
-	 * If the current userPromptArray is blank or empty use the default user prompt.
-	 * numberOfInputs parameter specifies how many inputs of this type are required.
-	 * Validate the input and ask again if the input is not valid.
-	 */
-	public static long[] getInputLong(int numberOfInputs, String[] userPromptArray) {
-		long[] userInputLongs = new long[numberOfInputs];
-		int arrayIndex = 0;
-		boolean badInput = true;
-		Scanner input = new Scanner(System.in);
-		// Display a prompt for the user to enter data. 
-		// Check input and if bad, advise the user and loop to prompt again until they provide proper input.
-		// Continue loop until the array is full of good inputs (i.e. no bad input or an arrayIndex less than its length.)
-		while (badInput || (arrayIndex < userInputLongs.length)) {
-			// Check if the user prompt text is empty or blank and use the default prompt if it is.
-			if (userPromptArray[arrayIndex].isBlank() || userPromptArray[arrayIndex].isEmpty()) {
-				userPromptArray[arrayIndex] = "Please enter integer #" + (arrayIndex+1) + " of " + numberOfInputs;
-			}
-			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println(userPromptArray[arrayIndex]);
-			// Try to interpret the user input string as a long integer and assign it to userInputLongs current element.
-			try {
-				userInputLongs[arrayIndex] = input.nextLong();
-				// Increment the index to the next element in the array.
-				arrayIndex++;
-				// If the code above did not throw an exception, the input is valid. Exit the loop if all is complete.
-				badInput = false;
-			} 
-			// Long.parseLong will throw a NumberFormatException if the input is not cannot be converted to a long integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not an integer. \n"
-						+ "Please enter a number without a decimal.");
-				badInput = true;
-			}
-			input.nextLine();
-		}
-		//input.close();
-		return userInputLongs;
-	}
-	
-	/** Method numberOfDigits takes a long integer and returns the number of digits the long integer has.
+	/** Method numberOfDigits takes an integer and returns the number of digits the integer has.
 	 * @param inputLong
 	 * @return
 	 */
-	private static long numberOfDigits(long inputLong) {
+	private static int numberOfDigits(long inputLong) {
 		int digitCount = 0;
 		while (inputLong != 0) {
-			inputLong /= 10;
+			inputLong /= 10L;
 			digitCount++;
 		}
 		return digitCount;
 	}
 	
-//Doubles
-
-	/** Prompt the user for a single double input in the console. Use the default user prompt.
+	/** Prompt the user for a set of long integers input in the console. 
+	 * 	Use the default user prompt for each input.
+	 * numberOfInputs parameter specifies how many inputs of this type are required.
 	 * Validate the input and ask again if the input is not valid.
 	 */
-	public static double getInputDouble() {
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		double userDouble = 0.0;
+	public static long[] getInputLongs(int numberOfInputs) {
+		long[] userInputLongs = new long[numberOfInputs];
+		int arrayIndex = 0;
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		boolean validInput = true;
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter a decimal number: ");
-			// Try to interpret the user input string as a double and assign it to userInputInts
-			try {
-				// If parseDouble does not throw an exception, the user's input is a double.
-				userDouble = input.nextDouble();
-				badInput = false;
-			} 
-			// Double.parseDouble will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not a decimal number.");
-				badInput = true;
+			String userPrompt = "Please enter integer #" + (arrayIndex+1) + " of " + numberOfInputs;
+			// Build the user prompt string with cancel options.
+			userPrompt = addCancelOption(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
+			// Check if the inputString is a valid long integer.
+			// isValidLong will display applicable error messages.
+			validInput = !isValidLong(inputString);
+			if (validInput) {
+				// User inputString has been validated so parse the string.
+				userInputLongs[arrayIndex] = Long.parseLong(inputString);
+				// Increment the index to the next element in the array.
+				arrayIndex++;
+			}
+		// Continue the loop if the string is a valid integer.
+		} while (!validInput || (arrayIndex < userInputLongs.length));
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userInputLongs;
+	}
+	
+	/** Method isValidLong tests to see if the inputString can be parsed as a long integer.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @return
+	 */
+	public static boolean isValidLong(String inputString) {
+		long inputLong = 0L;
+		// Try to interpret the user input string as an integer and assign it to userLong
+		try {
+			// If parseLong does not throw an exception, the user's input is a long integer.
+			inputLong = Long.parseLong(inputString);
+		} 
+		// Long.parseLong will throw a NumberFormatException if the input is not cannot be converted to an integer.
+		catch (Exception NumberFormatException) {
+			System.out.println("Your input was not an integer. \n"
+					+ "Please enter a number without a decimal.\n");
+			return false;
 		}
-		//input.close();
+		return true;
+	}
+	
+	/** Method isValidLong tests to see if the inputString can be parsed as an integer.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidLong(String inputString, boolean silent) {
+		long inputLong = 0L;
+		// Try to interpret the user input string as an integer and assign it to userLong
+		try {
+			// If parseLong does not throw an exception, the user's input is a long integer.
+			inputLong = Long.parseLong(inputString);
+		} 
+		// Long.parseLong will throw a NumberFormatException if the input is not cannot be converted to an integer.
+		catch (Exception NumberFormatException) {
+			if (!silent) {
+				System.out.println("Your input was not an integer. \n"
+					+ "Please enter a number without a decimal.\n");
+			}
+			return false;
+		}
+		return true;
+	}
+	
+	/** Method isValidLong tests to see if the inputString can be parsed as a long integer.
+	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @return
+	 */
+	public static boolean isValidLong(String inputString, int fromThis, int toThis) {
+		long inputLong = 0L;
+		if (isValidLong(inputString)) {
+			inputLong = Long.parseLong(inputString);
+		}
+		if (inputLong >= fromThis && inputLong <= toThis) {
+			return true;
+		}
+		System.out.println("Your input was not between " + fromThis + " and " + toThis + ".\n");
+		return false;
+	}
+	
+	/** Method isValidLong tests to see if the inputString can be parsed as an integer.
+	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidLong(String inputString, int fromThis, int toThis, boolean silent) {
+		long inputLong = 0L;
+		if (isValidLong(inputString, silent)) {
+			inputLong = Long.parseLong(inputString);
+		}
+		if (inputLong >= fromThis && inputLong <= toThis) {
+			return true;
+		}
+		if (!silent) {
+			System.out.println("Your input was not between " + fromThis + " and " + toThis + ".");
+		}
+		return false;
+	}
+
+//Doubles
+
+	/** Prompt the user for a single decimal input in the console. Use the default user prompt.
+	 * Validate the input and ask again if the input is not valid.
+	 */
+	public static Double getInputDouble() {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		double userDouble = 0.0;
+		// Build the user prompt string with cancel options.
+		String userPrompt = "Please enter an decimal number: ";
+		userPrompt = addCancelOption(userPrompt);
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+		// Continue the loop if the string is a valid decimal.
+		// isValidDouble will display applicable error messages.
+		} while (!isValidDouble(inputString));
+		// User inputString has been validated so parse the string.
+		userDouble = Double.parseDouble(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userDouble;
 	}
 	
-	/** Prompt the user for a single double input in the console. 
-	 * Prompt the user with userPrompt unless it is empty or blank. Otherwise provide the default prompt.
+	/** Prompt the user for a single decimal input in the console. 
+	 * If userPrompt is blank or empty use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
 	 */
-	public static double getInputDouble(String userPrompt) {
-		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
-			userPrompt = "Please enter a decimal number:";
-		}	
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		double userInt = 0.0;		
+	public static Double getInputDouble(String userPrompt) {
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		double userDouble = 0.0;
+		// Check if the user prompt text is empty or blank and use the default prompt if it is.
+		if (!isValidString(userPrompt)) {
+			userPrompt = "Please enter an decimal number:";
+		}	
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			// Try to interpret the user input string as a double and assign it to userInputInts
-			try {
-				// If parseDouble does not throw an exception, the user's input is a double.
-				userInt = input.nextDouble();
-				badInput = false;
-			} 
-			// Double.parseDouble will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not a decimal number.");
-				badInput = true;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
-		return userInt;
+		// Continue the loop if the string is a valid decimal.
+		// isValidDouble will display applicable error messages.
+		} while (!isValidDouble(inputString));
+		// User inputString has been validated so parse the string.
+		userDouble = Double.parseDouble(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userDouble;
 	}
 	
-	/** Prompt the user for a set of type double numbers input in the console. Use the default user prompt.
-	 * numberOfInputs parameter specifies how many inputs of this type are required.
+	/** Prompt the user for a single decimal input with a specified number of digits using the console. 
+	 * If userPrompt is blank or empty use the default user prompt.
 	 * Validate the input and ask again if the input is not valid.
 	 */
-	public static double[] getInputDoubleArray(int numberOfInputs) {
-		double[] userInputDouble = new double[numberOfInputs];
-		int arrayIndex = 0;
-		boolean badInput = true;
+	public static Double getInputDouble(String userPrompt, int numDigits) {
 		Scanner input = new Scanner(System.in);
-		// Display a prompt for the user to enter data. 
-		// Check input and if bad, advise the user and loop to prompt again until they provide proper input.
-		// Continue loop until the array is full of good inputs (i.e. no bad input or an arrayIndex less than its length.)
-		while (badInput || (arrayIndex < userInputDouble.length)) {
+		String inputString = "";
+		double userDouble = 0.0;
+		// Check if the user prompt text is empty or blank and use the default prompt if it is.
+		if (!isValidString(userPrompt)) {
+			userPrompt = "Please enter an decimal with " + numDigits + "digits (not counting the .):";
+		}	
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter decimal #" + (arrayIndex+1) + " of " + numberOfInputs);
-			// Try to interpret the user input string as an integer and assign it to userInputInts
-			try {
-				userInputDouble[arrayIndex] = input.nextDouble();
-				// Increment the index to the next element in the array.
-				arrayIndex++;
-				// If the code above did not throw an exception, the input is valid. Exit the loop if all is complete.
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not a decimal number.");
-				badInput = true;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			input.nextLine();
-		}
-		//input.close();
-		return userInputDouble;
+			// .length-1 will exclude the decimal point
+			if (inputString.length() != numDigits - 1) {
+				System.out.println("Your input did not have " + numDigits + "digits.\n");
+			}
+		// Continue the loop if the string is a valid decimal.
+		// isValidDouble will display applicable error messages.
+		} while (!isValidDouble(inputString) && inputString.length() != numDigits);
+		// User inputString has been validated so parse the string.
+		userDouble = Double.parseDouble(inputString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userDouble;
 	}
 	
-	/** Prompt the user for a set of type double numbers input in the console. 
+	/** Prompt the user for a set of decimals input in the console. Use the default user prompt for each input.
 	 * numberOfInputs parameter specifies how many inputs of this type are required.
-	 * Prompt the user with the default prompt if that element of userPromptArray is empty or blank.
 	 * Validate the input and ask again if the input is not valid.
 	 */
-	public static double[] getInputDoubleArray(int numberOfInputs, String[] userPromptArray) {
-		double[] userInputDouble = new double[numberOfInputs];
+	public static double[] getInputDoubles(int numberOfInputs) {
+		double[] userInputDoubles = new double[numberOfInputs];
 		int arrayIndex = 0;
-		boolean badInput = true;
 		Scanner input = new Scanner(System.in);
-		// Display a prompt for the user to enter data. 
-		// Check input and if bad, advise the user and loop to prompt again until they provide proper input.
-		// Continue loop until the array is full of good inputs (i.e. no bad input or an arrayIndex less than its length.)
-		while (badInput || (arrayIndex < userInputDouble.length)) {
-			// Check if the user prompt text is empty or blank and use the default prompt if it is.
-			if (userPromptArray[arrayIndex].isBlank() || userPromptArray[arrayIndex].isEmpty()) {
-				userPromptArray[arrayIndex] = "Please enter decimal #" + (arrayIndex+1) + " of " + numberOfInputs;
+		String inputString = "";
+		boolean validInput = true;
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			String userPrompt = "Please enter decimal #" + (arrayIndex+1) + " of " + numberOfInputs;
+			// Build the user prompt string with cancel options.
+			userPrompt = addCancelOption(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-			// Prompt the user for an input in the console 
-			System.out.println(userPromptArray[arrayIndex]);
-			// Try to interpret the user input string as an double and assign it to userInputInts
-			try {
-				userInputDouble[arrayIndex] = input.nextDouble();
+			// Check if the inputString is a valid decimal.
+			// isValidDouble will display applicable error messages.
+			validInput = !isValidDouble(inputString);
+			if (validInput) {
+				// User inputString has been validated so parse the string.
+				userInputDoubles[arrayIndex] = Double.parseDouble(inputString);
 				// Increment the index to the next element in the array.
 				arrayIndex++;
-				// If the code above did not throw an exception, the input is valid. Exit the loop if all is complete.
-				badInput = false;
-			} 
-			// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-			catch (Exception NumberFormatException) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("Your input was not a decimal number.");
-				badInput = true;
 			}
-			input.nextLine();
+		// Continue the loop if the string is a valid decimal.
+		} while (!validInput || (arrayIndex < userInputDoubles.length));
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userInputDoubles;
+	}
+	
+	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @return
+	 */
+	public static boolean isValidDouble(String inputString) {
+		double inputDouble = 0.0;
+		// Try to interpret the user input string as an decimal and assign it to userDouble
+		try {
+			// If parseDouble does not throw an exception, the user's input is an decimal.
+			inputDouble = Double.parseDouble(inputString);
+		} 
+		// Double.parseDouble will throw a NumberFormatException if the input is not cannot be converted to an decimal.
+		catch (Exception NumberFormatException) {
+			System.out.println("Your input was not an decimal number. \n");
+			return false;
 		}
-		//input.close();
-		return userInputDouble;
+		return true;
+	}
+	
+	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidDouble(String inputString, boolean silent) {
+		double inputDouble = 0.0;
+		// Try to interpret the user input string as an decimal and assign it to userDouble
+		try {
+			// If parseDouble does not throw an exception, the user's input is an decimal.
+			inputDouble = Double.parseDouble(inputString);
+		} 
+		// Double.parseDouble will throw a NumberFormatException if the input is not cannot be converted to an decimal.
+		catch (Exception NumberFormatException) {
+			if (!silent) {
+				System.out.println("Your input was not an decimal. \n"
+					+ "Please enter a number without a decimal.\n");
+			}
+			return false;
+		}
+		return true;
+	}
+	
+	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
+	 * If it can, then it checks if the decimal is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @return
+	 */
+	public static boolean isValidDouble(String inputString, double fromThis, double toThis) {
+		double inputDouble = 0.0;
+		if (isValidDouble(inputString)) {
+			inputDouble = Double.parseDouble(inputString);
+		}
+		if (inputDouble >= fromThis && inputDouble <= toThis) {
+			return true;
+		}
+		System.out.println("Your input was not between " + fromThis + " and " + toThis + ".\n");
+		return false;
+	}
+	
+	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
+	 * If it can, then it checks if the decimal is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidDouble(String inputString, double fromThis, double toThis, 
+			boolean silent) {
+		double inputDouble = 0.0;
+		if (isValidDouble(inputString, silent)) {
+			inputDouble = Double.parseDouble(inputString);
+		}
+		if (inputDouble >= fromThis && inputDouble <= toThis) {
+			return true;
+		}
+		if (!silent) {
+			System.out.println("Your input was not between " + fromThis + " and " + toThis + ".");
+		}
+		return false;
 	}
 	
 //Character
 	
 	/** Prompt the user for a single character input in the console. Use the default prompt text.
-	 * Validate the input is not empty. Take only the first letter in the string.
+	 * Validate the input is not empty. Takes only the first letter in the string.
+	 * Return null if the user cancelled.
 	 */
 	public static Character getInputChar() {
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		char userChar = 'a';
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
-			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter a character:\n (will only take the first character)");
-			String userInput = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInput = userInput.trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	( userInput.isBlank() ) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
-			} else {
-				userChar = userInput.charAt(0);
-				badInput = false;
-			}
-		}
-		//input.close();
+			Scanner input = new Scanner(System.in);
+			String inputString = "";
+			char userChar = 'a';
+			// Build the user prompt string with cancel options.
+			String userPrompt = "Please enter a character:\n (will only take the first character)";
+			userPrompt = addCancelOption(userPrompt);
+			do {
+				// Prompt the user for an input in the console and capture the user input as a string
+				System.out.println(userPrompt);
+				inputString = input.nextLine();
+				inputString = inputString.trim();
+				// Check if the user has cancelled and if so, return null.
+				if (userCancelled(inputString)) {
+					return null;
+				}
+			// Continue the loop if the string is a valid integer.
+			// isValidInt will display applicable error messages.
+			} while (!isValidChar(inputString));
+			// User inputString has been validated so parse the string.
+			userChar = inputString.charAt(0);
+//			Appears to close the system.in as well as the scanner, messing up future scanners
+//			input.close(); 
 		return userChar;
 	}
 	
 	/** Prompt the user for a single character input in the console. 
 	 * Prompt the user with the string userPrompt.
-	 * Validate the input is not empty. Take only the first letter in the string.
+	 * Validate the input is not empty. Takes only the first letter in the string.
+	 * Return null if the user cancelled.
 	 */
 	public static Character getInputChar(String userPrompt) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		char userChar = 'a';
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter a character:\n (will only take the first character)";
 		}
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		char userChar = 'a';
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			String userInput = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInput = userInput.trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	( userInput.isBlank() ) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
-			} else {
-				userChar = userInput.charAt(0);
-				badInput = false;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidChar(inputString));
+		// User inputString has been validated so parse the string.
+		userChar = inputString.charAt(0);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userChar;
+	}
+
+	/** Prompt the user for a single character input in the console. Use the default prompt text.
+	 * Validate the input is not empty. Takes only the first letter in the string.
+	 * Prompt again if the number is not between fromThis and toThis (inclusive). 
+	 * Compares using ASCII values.
+	 * Return null if the user cancelled.
+	 * @param fromThis
+	 * @param toThis
+	 */
+	public static Character getInputChar(char fromThis, char toThis) {
+			Scanner input = new Scanner(System.in);
+			String inputString = "";
+			char userChar = 'a';
+			// Build the user prompt string with cancel options.
+			String userPrompt = "Please enter a character between " + fromThis + " and " + toThis + ":"
+					+ "\n (will only take the first character)";
+			userPrompt = addCancelOption(userPrompt);
+			do {
+				// Prompt the user for an input in the console and capture the user input as a string
+				System.out.println(userPrompt);
+				inputString = input.nextLine();
+				inputString = inputString.trim();
+				// Check if the user has cancelled and if so, return null.
+				if (userCancelled(inputString)) {
+					return null;
+				}
+			// Continue the loop if the string is a valid integer.
+			// isValidInt will display applicable error messages.
+			} while (!isValidChar(inputString, fromThis, toThis));
+			// User inputString has been validated so parse the string.
+			userChar = inputString.charAt(0);
+//			Appears to close the system.in as well as the scanner, messing up future scanners
+//			input.close(); 
+		return userChar;
+	}
+	
+	/** Prompt the user for a single character input in the console. 
+	 * Prompt the user with the string userPrompt.
+	 * Validate the input is not empty. Takes only the first letter in the string.
+	 * Prompt again if the number is not between fromThis and toThis (inclusive). 
+	 * Compares using ASCII values.
+	 * Return null if the user cancelled.
+	 * @param fromThis
+	 * @param toThis
+	 */
+	public static Character getInputChar(String userPrompt, char fromThis, char toThis) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		char userChar = 'a';
+		// Check if the user prompt text is empty or blank and use the default prompt if it is.
+		if (!isValidString(userPrompt)) {
+			userPrompt = "Please enter a character between " + fromThis + " and " + toThis + ":"
+					+ "\n (will only take the first character)";
 		}
-		//input.close();
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidChar(inputString));
+		// User inputString has been validated so parse the string.
+		userChar = inputString.charAt(0);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userChar;
 	}
 	
@@ -655,37 +1005,37 @@ public class ConsoleInput {
 	 * Validate the input as a letter A-Z or a-z and ask again if the input is not valid or is empty.
 	 */
 	public static Character getInputLetter() {
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		char userLetter = 'a';
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		char userChar = 'a';
+		boolean validChar = false;
+		String userPrompt = "Please enter a character:\n (will only take the first character)";
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter a letter:\n (will only take the first character)");
-			String userInput = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInput = userInput.trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	( userInput.isBlank() ) {
-				// Advise the user the input is empty and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
-			// Check if the user did not put in a letter by checking ASCII values are outside the range of letters.
-			// A is 65 to Z which is 90 and a is 97 to z which is 122
-			} else if (!Character.isLetter(userInput.charAt(0))) {
-				System.out.println("The first character of your input was not a letter. \n"
-						+ "Please try again with an upper or lowercase letter.");
-				badInput = true;
-			} else {
-				userLetter = userInput.charAt(0);
-				// Input is good, so exit the loop.
-				badInput = false;	
-			} 
-		}
-		//input.close();
-		return userLetter;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+			validChar = isValidChar(inputString);
+			if (validChar) {
+				 if (!Character.isLetter(inputString.charAt(0))) {
+					System.out.println("The first character of your input was not a letter. \n"
+								+ "Please try again with an upper or lowercase letter.");
+				 }
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!validChar);
+		// User inputString has been validated so parse the string.
+		userChar = inputString.charAt(0);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userChar;
 	}
 	
 	/** Prompt the user for a single letter input in the console. 
@@ -693,41 +1043,117 @@ public class ConsoleInput {
 	 * Validate the input as a letter A-Z or a-z and ask again if the input is not valid or is empty.
 	 */
 	public static Character getInputLetter(String userPrompt) {
-		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
-			userPrompt = "Please enter a letter:\n (will only take the first character)";
-		}
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		char userLetter = 'a';
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		char userChar = 'a';
+		boolean validChar = false;
+		// Check if the user prompt text is empty or blank and use the default prompt if it is.
+		if (!isValidString(userPrompt)) {
+			userPrompt = "Please enter a character:\n (will only take the first character)";
+		}
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			String userInput = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInput = userInput.trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	( userInput.isBlank() ) {
-				// Advise the user the input is empty and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
-			// Check if the user did not put in a letter by checking ASCII values are outside the range of letters.
-			// A is 65 to Z which is 90 and a is 97 to z which is 122
-			} else if (!Character.isLetter(userInput.charAt(0))) {
-				System.out.println("The first character of your input was not a letter. \n"
-						+ "Please try again with an upper or lowercase letter.");
-				badInput = true;
-			} else {
-				userLetter = userInput.charAt(0);
-				// Input is good, so exit the loop.
-				badInput = false;	
-			} 
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+			validChar = isValidChar(inputString);
+			if (validChar) {
+				 if (!Character.isLetter(inputString.charAt(0))) {
+					System.out.println("The first character of your input was not a letter. \n"
+								+ "Please try again with an upper or lowercase letter.");
+				 }
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!validChar);
+		// User inputString has been validated so parse the string.
+		userChar = inputString.charAt(0);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return userChar;
+	}
+	
+	/** Method isValidChar tests to see if the inputString not is empty or blank.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @return
+	 */
+	public static boolean isValidChar(String inputString) {
+		// If the input string is blank or empty advise the user and return false.
+		if (inputString.isBlank() || inputString.isEmpty()) {
+			System.out.println("You did not provide an input.\n");
+			return false;
 		}
-		//input.close();
-		return userLetter;
+		return true;
+	}
+	
+	/** Method isValidChar tests to see if the inputString is not empty or blank.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidChar(String inputString, boolean silent) {
+		// If the input string is blank or empty advise the user (if not silent) and return false.
+		if (inputString.isBlank() || inputString.isEmpty()) {
+			if (!silent) {
+				System.out.println("You did not provide an input.\n");
+			}
+			return false;
+		}
+		return true;
+	}
+	
+	/** Method isValidChar tests to see if the inputString is not empty or blank.
+	 * If it can, then it checks if the character is between fromThis and toThis inclusively
+	 * using the ASCII values.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @return
+	 */
+	public static boolean isValidChar(String inputString, char fromThis, char toThis) {
+		char inputChar = 'a';
+		if (isValidChar(inputString)) {
+			inputChar = inputString.charAt(0);
+		}
+		if (inputChar >= fromThis && inputChar <= toThis) {
+			return true;
+		}
+		System.out.println("Your input was not between " + fromThis + " and " + toThis + ".\n");
+		return false;
+	}
+	
+	/** Method isValidChar tests to see if the inputString can be parsed as an decimal.
+	 * If it can, then it checks if the decimal is between fromThis and toThis inclusively.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param fromThis
+	 * @param toThis
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidChar(String inputString, char fromThis, char toThis, boolean silent) {
+		char inputChar = 'a';
+		if (isValidChar(inputString)) {
+			inputChar = inputString.charAt(0);
+		}
+		if (inputChar >= fromThis && inputChar <= toThis) {
+			return true;
+		}
+		if (!silent) {
+			System.out.println("Your input was not between " + fromThis + " and " + toThis + ".");
+		}
+		return false;
 	}
 	
 //String
@@ -736,128 +1162,225 @@ public class ConsoleInput {
 	 * Validate the input is not empty.
 	 */
 	public static String getInputString() {
-		String userInput = null;
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		String inputString = "";
+		String userPrompt = "Please enter an string of characters:";
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter an string of characters:"); 
-			userInput = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInput = userInput.trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	( !userInput.isBlank() ) {
-				badInput = false;
-			} else {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-		}
-		//input.close();
-		return userInput;
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidString(inputString));
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return inputString;
 	}
 	
 	/** Prompt the user for a string input in the console. 
 	 * If the input string is not empty, prompt the user with userPrompt. Validate the input is not empty.
 	 */
 	public static String getInputString(String userPrompt) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter an string of characters:";
 		}
-		String userInput = null;
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput) {
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPrompt);
-			userInput = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInput = userInput.trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	( !userInput.isBlank() ) {
-				badInput = false;
-			} else {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidString(inputString));
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return inputString;
+	}
+	
+	/** Prompt the user for a string input with numChars characters in the string using the console. 
+	 * If the input string is not empty, prompt the user with userPrompt. Validate the input is not empty.
+	 */
+	public static String getInputString(int numChars) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		boolean validString = false;
+		String userPrompt = "Please enter an string of " + numChars + " characters:";
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+			validString = !isValidString(inputString);
+			// Update validString if the length of the input string have the required numChars.
+			if (validString) {
+				validString = inputString.length() == numChars;
+			}
+		// Continue the loop if the string is a valid string.
+		// isValidInt will display applicable error messages.
+		} while (!validString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return inputString;
+	}
+	
+	/** Prompt the user for a string input with numChars characters in the string using the console. 
+	 * If the input string is not empty, prompt the user with userPrompt. Validate the input is not empty.
+	 */
+	public static String getInputString(String userPrompt, int numChars) {
+		Scanner input = new Scanner(System.in);
+		String inputString = "";
+		boolean validString = false;
+		// Check if the user prompt text is empty or blank and use the default prompt if it is.
+		if (!isValidString(userPrompt)) {
+			userPrompt = "Please enter an string of " + numChars + " characters:";
 		}
-		//input.close();
-		return userInput;
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
+			// Prompt the user for an input in the console and capture the user input as a string
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
+			}
+			validString = !isValidString(inputString);
+			// Update validString if the length of the input string have the required numChars.
+			if (validString) {
+				validString = inputString.length() == numChars;
+			}
+		// Continue the loop if the string is a valid string.
+		// isValidInt will display applicable error messages.
+		} while (!validString);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
+		return inputString;
 	}
 	
 	/** Prompt the user for a multiple string inputs in the console. Use the default prompt text for each input.
 	 * Validate the input is not empty.
 	 */
-	public static String[] getInputString(int numberOfInputs) {
+	public static String[] getInputStrings(int numberOfInputs) {
+		Scanner input = new Scanner(System.in);
 		String[] userInputArray = new String[numberOfInputs];
 		int arrayIndex = 0;
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
-		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput || (arrayIndex < userInputArray.length)) {
+		String inputString = "";
+		boolean validString = false;
+		String userPrompt = "Please enter an string of characters:";
+		// Build the user prompt string with cancel options.
+		userPrompt = addCancelOption(userPrompt);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
-			System.out.println("Please enter an string of characters:");
-			userInputArray[arrayIndex] = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInputArray[arrayIndex] = userInputArray[arrayIndex].trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not, the input is good and we can exit the loop or get another input if needed.
-			if 	( userInputArray[arrayIndex].isBlank() ) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
-			} else {
-				badInput = false;
-				arrayIndex ++;
+			System.out.println(userPrompt);
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-		}
-		//input.close();
+			validString = isValidString(inputString);
+			if (validString) {
+				userInputArray[arrayIndex] = inputString;
+				arrayIndex++;
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidString(inputString) || arrayIndex < numberOfInputs);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userInputArray;
 	}
 	
 	/** Prompt the user for a multiple string inputs in the console. 
 	 * Use the array of user prompts to ask for each input. Validate the input is not empty.
 	 */
-	public static String[] getInputString(int numberOfInputs, String[] userPromptArray) {
-		String[] userInputArray = new String[numberOfInputs];
-		int arrayIndex = 0;
-		// Assume the input is invalid until after the method validates it.
-		boolean badInput = true;
+	public static String[] getInputStrings(String[] userPromptArray) {
 		Scanner input = new Scanner(System.in);
-		// Loop to re-prompt the user for a valid input as needed.
-		while (badInput || (arrayIndex < userInputArray.length)) {
-			// Check if the user prompt text is empty or blank and use the default prompt if it is.
-			if (userPromptArray[arrayIndex].isBlank() || userPromptArray[arrayIndex].isEmpty()) {
-				userPromptArray[arrayIndex] = "Please enter an string of characters:";
-			}
+		String[] userInputArray = new String[userPromptArray.length];
+		int arrayIndex = 0;
+		String inputString = "";
+		boolean validString = false;
+		// Check if the user prompt text is empty or blank and use the default prompt if it is.
+		if (!isValidString(userPromptArray[arrayIndex])) {
+			userPromptArray[arrayIndex] = "Please enter an string of characters:";
+		}
+		// Build the user prompt string with cancel options.
+		userPromptArray[arrayIndex] = addCancelOption(userPromptArray[arrayIndex]);
+		do {
 			// Prompt the user for an input in the console and capture the user input as a string
 			System.out.println(userPromptArray[arrayIndex]);
-			userInputArray[arrayIndex] = input.nextLine();
-			// Trim the leading and trailing white space from the string.
-			userInputArray[arrayIndex] = userInputArray[arrayIndex].trim();
-			// Check if the user did not put anything in. 
-			// If so prompt again, if not, the input is good and we can exit the loop or get another input if needed.
-			if 	( userInputArray[arrayIndex].isBlank() ) {
-				// Advise the user the input is invalid and continue the loop
-				System.out.println("You did not provide an input. \nPlease try again.");
-				badInput = true;
-			} else {
-				badInput = false;
-				arrayIndex ++;
+			inputString = input.nextLine();
+			inputString = inputString.trim();
+			// Check if the user has cancelled and if so, return null.
+			if (userCancelled(inputString)) {
+				return null;
 			}
-		}
-		//input.close();
+			validString = isValidString(inputString);
+			if (validString) {
+				userInputArray[arrayIndex] = inputString;
+				arrayIndex++;
+			}
+		// Continue the loop if the string is a valid integer.
+		// isValidInt will display applicable error messages.
+		} while (!isValidString(inputString) || arrayIndex < userPromptArray.length);
+//		Appears to close the system.in as well as the scanner, messing up future scanners
+//		input.close(); 
 		return userInputArray;
+	}
+	
+	/** Method isValidString tests to see if the inputString not is empty or blank.
+	 * If so, it returns true, otherwise false.
+	 * @param inputString
+	 * @return
+	 */
+	public static boolean isValidString(String inputString) {
+		// If the input string is blank or empty advise the user and return false.
+		if (inputString.isBlank() || inputString.isEmpty()) {
+			System.out.println("You did not provide an input.\n");
+			return false;
+		}
+		return true;
+	}
+	
+	/** Method isValidString tests to see if the inputString is not empty or blank.
+	 * If so, it returns true, otherwise false.
+	 * If silent is true, then do not display an error message on the console.
+	 * @param inputString
+	 * @param silent
+	 * @return
+	 */
+	public static boolean isValidString(String inputString, boolean silent) {
+		// If the input string is blank or empty advise the user (if not silent) and return false.
+		if (inputString.isBlank() || inputString.isEmpty()) {
+			if (!silent) {
+				System.out.println("You did not provide an input.\n");
+			}
+			return false;
+		}
+		return true;
 	}
 	
 	/** Prompt the user for a string input representing a two letter US state, commonwealth, or territory 
@@ -869,7 +1392,7 @@ public class ConsoleInput {
 	 */
 	public static String getInputState(String userPrompt) {
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (userPrompt.isBlank() || userPrompt.isEmpty()) {
+		if (!isValidString(userPrompt)) {
 			userPrompt = "Please enter the two characters of a US State, Commonwealth, or Territory \n"
 					+ "(e.g. IL for Illinois):";
 		}

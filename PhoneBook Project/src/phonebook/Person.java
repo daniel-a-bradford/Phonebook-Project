@@ -110,6 +110,9 @@ public class Person extends Address {
 		if (Long.toString(personPhone).length() == 10) {
 			this.personPhone = personPhone;
 			return true;
+		} else if (Long.toString(personPhone).length() < 10 && personPhone != 0) {
+			this.personPhone = 	personPhone;
+			return true;
 		}
 		System.out.println("setPersonPhone - Invalid phone number.");
 		return false;
@@ -143,10 +146,8 @@ public class Person extends Address {
 	}
 
 	/** Method promptUsertoUpdatePersonInfo uses dialog boxes to prompt the user for the person name, 
-	 * 	street number and name, additional street info (if needed), city, state, zip code, zip code+4 (if known),
-	 * 	person e-mail, and if the new person can check out books right away. 
-	 * 
-	 * @param Person newPerson - new person object shell with personID assigned
+	 * 	street number and name, additional street info (if needed), city, state, zip code, zip code+4 
+	 * 	(if known).
 	 */
 	public boolean promptUsertoUpdatePersonInfo() {
 		boolean BadInput = true;
@@ -183,10 +184,9 @@ public class Person extends Address {
 	}
 	
 	/** Method promptUsertoUpdatePersonInfo updates the user information by prompting the user for the updated person name, 
-	 * 	street number and name, additional street info (if needed), city, state, zip code, zip code+4 (if known),
-	 * 	person e-mail, and if the new person can check out books right away. 
-	 * 
-	 * @param Person newPerson - new person object shell with personID assigned
+	 * 	street number and name, additional street info (if needed), city, state, zip code, zip code+4 
+	 * (if known). newPerson is a new person object shell with personID assigned.
+	 * @param newPerson
 	 */
 	public boolean promptUsertoUpdatePersonInfo(Person oldPerson) {
 		// Skip the function if the newPerson.personID is not assigned.
@@ -195,25 +195,43 @@ public class Person extends Address {
 			do {
 				String firstName = ConsoleInput.getInputString("Current first name: " + oldPerson.getFirstName()
 						+ "\nPlease enter the person's new first name: ");
+				if (firstName == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				// Remove all white space from the string
 				firstName = firstName.replaceAll("\\s", "");
 				String middleName = ConsoleInput.getInputString("Current middle name(s): " + oldPerson.getMiddleName()
 						+ "\nPlease enter the person's middle name(s): ");
+				if (middleName == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				// Remove white space from the beginning and end of the string.
-				firstName = middleName.trim();
+				middleName = middleName.trim();
 				String lastName = ConsoleInput.getInputString("Current last name: " + oldPerson.getLastName()
 					+ "\nPlease enter the person's last name: ");
+				if (lastName == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				// Remove all white space from the string
 				lastName = lastName.replaceAll("\\s", "");
 				this.personName = firstName + " " + middleName + " " + lastName;
 				extractNames(this.personName);
 				
-				if (!super.promptUsertoUpdateAddressInfo()) {
+				Boolean gotAddress = super.promptUsertoUpdateAddressInfo();
+				if (gotAddress == null || !gotAddress) {
+					System.out.println("User cancelled");
 					break userCancelled;
 				}
 				
 				Long phone = ConsoleInput.getInputLong("Current phone number: " 
 						+ oldPerson.getPersonPhone() + "\nPlease enter the person's phone number (all digits no separators):", 10);
+				if (phone == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				this.personPhone = phone;
 				
 				this.personID = oldPerson.getPersonID();
@@ -302,7 +320,7 @@ public class Person extends Address {
 		if (!super.isValidAddress(isNewPerson)) {
 			return false;
 		}
-		if (this.personPhone == 0L || Long.toString(this.personPhone).length() != 10) {
+		if (this.personPhone == 0L || Long.toString(this.personPhone).length() > 10) {
 			System.out.println("isValidPerson - person phone number information is invalid.");
 			return false;
 		}
@@ -317,8 +335,11 @@ public class Person extends Address {
 	public String toString() {
 		String outputString = this.lastName + ", "  + this.firstName + " " + this.middleName + "  " + 
 					super.toString() + " ";
-		String phoneString = "";
-		phoneString = Long.toString(this.personPhone).trim();
+		String phoneString = Long.toString(this.personPhone);
+		if (phoneString.length() < 10) {
+			phoneString = String.format("%09d", personPhone);
+			phoneString = "0" + phoneString;
+		} 
 		if (phoneString.length() == 10) {
 			phoneString = "(" + phoneString.subSequence(0, 2) + ") " + phoneString.subSequence(3, 5) + "-" + phoneString.subSequence(6, 9);
 		} else {

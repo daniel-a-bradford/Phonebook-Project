@@ -33,8 +33,7 @@ public class PhonebookMain {
 					+ "2. Search for a person and display their information.\n"
 					+ "3. Search for a person and update their information.\n"
 					+ "4. Search for a person and delete their information.\n"
-					+ "5. Show all people in the phonebook.\n"
-					+ "6. Exit the phonebook.", 6);
+					+ "5. Show all people in the phonebook.", 5);
 			
 			// If null is returned, skip the remaining instructions since the user wants to exit.
 			if (userInputInt != null) {
@@ -46,7 +45,9 @@ public class PhonebookMain {
 				case 2:
 					System.out.println("Person Search");
 					Person[] peopleFound = personSearchMenu(ourPhonebook);
-					displayPeopleFound(peopleFound);
+					if (peopleFound != null) {
+						displayPeopleFound(peopleFound);
+					}
 					break;
 				case 3:
 					System.out.println("Update Person");
@@ -59,9 +60,6 @@ public class PhonebookMain {
 				case 5:
 					System.out.println(ourPhonebook.toString());
 					break;	
-				case 6:
-					userExit = true;
-					break;
 				default:
 					System.out.println("You selected " + userInputInt + " which is not a valid menu option.");
 				}
@@ -69,6 +67,7 @@ public class PhonebookMain {
 				userExit = true;
 			}
 		}
+		System.out.println("Thank you for visiting the " + ourPhonebook.getPhonebookName());
 	}
 	
 	/** Method personAddMenu provides the user a menu to choose how they want to enter the new person information:
@@ -78,9 +77,13 @@ public class PhonebookMain {
 	 */
 	private static Phonebook personAddMenu(Phonebook currentPhonebook) {
 		// Call addPerson requesting user input.
-		boolean promptOrFormatted = ConsoleInput.getInputBoolean("Do you want to enter the new person information "
+		Boolean promptOrFormatted = ConsoleInput.getInputBoolean("Do you want to enter the new person information "
 				+ "by being prompted for each piece of data? \n"
 				+ "If no, you will be prompted for pre-formatted data separated by commas.");
+		if (promptOrFormatted == null) {
+			System.out.println("Cancelled by user.");
+			return currentPhonebook;
+		}
 		if (currentPhonebook.addPerson(promptOrFormatted)) {
 			System.out.println("Person added successfully.");
 		} else {
@@ -107,8 +110,11 @@ public class PhonebookMain {
 				+ "6. State\n"
 				+ "7. Zip Code\n"
 				+ "8. Phone Number\n"
-				+ "9. Exit to the main menu\n"
-				+ "Please enter the number of your selection:", 9);
+				+ "Please enter the number of your selection:", 8);
+		if (searchType == null) {
+			System.out.println("Cancelled by user.");
+			return null;
+		}
 		String searchString = "";
 		Person[] peopleFound = new Person[0];
 		boolean userExit = false;
@@ -218,15 +224,27 @@ public class PhonebookMain {
 	 */
 	private static Phonebook personUpdateMenu(Phonebook ourPhonebook) {
 		Person[] peopleFound = personSearchMenu(ourPhonebook);
-		displayPeopleFound(peopleFound);
+		if (peopleFound == null) {
+			System.out.println("Cancelled by user.");
+			return ourPhonebook;
+		}
 		if (peopleFound.length == 0) {
 			System.out.println("No results to update");
 			return ourPhonebook;
 		}
-		int userChoice = ConsoleInput.getInputChoice(
+		displayPeopleFound(peopleFound);
+		Integer userChoice = ConsoleInput.getInputChoice(
 				"Please type the number of the search result you want to update:", peopleFound.length);
-		boolean userWantsPrompts = ConsoleInput.getInputBoolean("Would you like to be prompted to update each attribute of "
-				+ peopleFound[userChoice - 1].getPersonName() + " individually?");		
+		if (userChoice == null) {
+			System.out.println("Cancelled by user.");
+			return ourPhonebook;
+		}
+		Boolean userWantsPrompts = ConsoleInput.getInputBoolean("Would you like to be prompted to update each attribute of "
+				+ peopleFound[userChoice - 1].getPersonName() + " individually?");
+		if (userWantsPrompts == null) {
+			System.out.println("Cancelled by user.");
+			return ourPhonebook;
+		}
 		if (ourPhonebook.updatePerson(peopleFound[userChoice - 1], userWantsPrompts)) {
 			System.out.println("Person update successful.");
 		} else {
@@ -244,13 +262,21 @@ public class PhonebookMain {
 	 */
 	private static Phonebook personDeleteMenu(Phonebook ourPhonebook) {
 		Person[] peopleFound = personSearchMenu(ourPhonebook);
-		displayPeopleFound(peopleFound);
+		if (peopleFound == null) {
+			System.out.println("Cancelled by user.");
+			return ourPhonebook;
+		}
 		if (peopleFound.length == 0) {
 			System.out.println("No results to delete.");
 			return ourPhonebook;
 		}
-		int userChoice = ConsoleInput.getInputChoice(
+		displayPeopleFound(peopleFound);
+		Integer userChoice = ConsoleInput.getInputChoice(
 				"Please type the number of the search result you want to delete:", peopleFound.length);
+		if (userChoice == null) {
+			System.out.println("Cancelled by user.");
+			return ourPhonebook;
+		}
 		if (ourPhonebook.deletePerson(peopleFound[userChoice - 1])) {
 			System.out.println("Person delete successful.");
 		} else {

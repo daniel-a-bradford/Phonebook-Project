@@ -159,8 +159,13 @@ public class Phonebook {
 				System.out.println("deletePerson - PersonID not found.");
 				return false;
 			}
-			if (ConsoleInput.getInputBoolean("Do you want to delete the following person from the phonebook?\n" +
-					existingPerson.toString())) {
+			Boolean confirmDelete = ConsoleInput.getInputBoolean("Do you want to delete the following person from the phonebook?\n" +
+					existingPerson.toString());
+			if (confirmDelete == null) {
+				System.out.println("User cancelled");
+				return false;
+			}
+			if (confirmDelete) {
 				// Replace the Person in the array with null, then clean all nulls out of the phonebookPersonArray
 				this.phonebookPersonArray[indexOfExistingPerson] = null;
 				this.phonebookPersonArray = cleanArray(this.phonebookPersonArray);

@@ -88,6 +88,10 @@ public class Address {
 		if (Integer.toString(zip).length() == 5) {
 			this.zip = zip;
 			return true;
+		// Values with leading zeros are fine as long as the zip code is not zero.
+		} else if (Long.toString(zip).length() < 5 && zip != 0) {
+			this.zip = zip;
+			return true;
 		}
 		System.out.println("setAddressZip - Invalid 5 digit zip code.");
 		return false;
@@ -98,10 +102,11 @@ public class Address {
 	}
 
 	public boolean setAddressZipPlus4(int zipPlus4) {
-		if (Integer.toString(zipPlus4).length() == 4) {
+		// Allows zero values
+		if (Integer.toString(zipPlus4).length() <= 4) {
 			this.zipPlus4 = zipPlus4;
 			return true;
-		}
+		} 
 		System.out.println("setAddressZipPlus4 - Invalid 4 digit zip+4.");
 		return false;
 	}
@@ -111,44 +116,68 @@ public class Address {
 	 * @param Address newAddress - new address object shell with addressID assigned
 	 */
 	public boolean promptUsertoUpdateAddressInfo() {
-//		boolean BadInput = true;
 //		Skip the function if the newAddress.addressID is not assigned.
 //		TODO After prompting display address information and re-prompt if the information is incorrect
-//			userCancelled:
-//			do {
-				String streetName1 = ConsoleInput.getInputString("Please enter the address's street number and street name: ");
+			userCancelled:
+			do {
+				String streetName1 = ConsoleInput.getInputString("Please enter the street number and street name: ");
+				// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+				if (streetName1 == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				streetName1 = streetName1.trim();
 				this.street1 = streetName1;
 				
-				String streetName2 = ConsoleInput.getInputString("Please enter the address's additional street information "
+				String streetName2 = ConsoleInput.getInputString("Please enter the additional street information "
 						+ "(e.g. Apt#, Building#, Care of, etc.) (Enter - if none): ");
-				streetName2 = streetName2.trim();
-				if (streetName2.contains("-")) {
-					this.street2 = "";
-				} else {
-					this.street2 = streetName2;
+				// If ConsoleInput return is null, then the user pressed Cancel, set street equal to "".
+				if (streetName2 == null) {
+					System.out.println("Skipping additional street information");
+					streetName2 = "";
 				}
+				streetName2 = streetName2.trim();
+				this.street2 = streetName2;
 				
-				String city = ConsoleInput.getInputString("Please enter the address's city: ");
+				String city = ConsoleInput.getInputString("Please enter the city: ");
+				// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+				if (city == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				city = city.trim();
 				this.city = city;
 				
 				String state = ConsoleInput.getInputState("Please enter the two characters of a US State, Commonwealth, or Territory \n"
 						+ "(e.g. IL for Illinois): ");
+				// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+				if (state == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				this.state = state;
 				
-				Integer zip = ConsoleInput.getInputInt("Please enter the address's 5 digit zip code: ", 5);
+				Integer zip = ConsoleInput.getInputInt("Please enter the 5 digit zip code: ", 5);
+				// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+				if (zip == null) {
+					System.out.println("User cancelled");
+					break userCancelled;
+				}
 				this.zip = zip;
 				
-				Integer zipPlus4 = ConsoleInput.getInputInt("Please enter the address's 4 digit zip code+4:\n"
-								+ "Enter 0 if not known", 5);
+				Integer zipPlus4 = ConsoleInput.getInputInt("Please enter the 4 digit zip code+4:\n"
+								+ "(exit if not known)", 4);
+				// If ConsoleInput return is null, then the user pressed Cancel, so set zipPlus4 to 0.
+				if (zipPlus4 == null) {
+					System.out.println("Skipping zip code+4");
+					zipPlus4 = 0;
+				} 
 				this.zipPlus4 = zipPlus4;
-				
+		
 				return true;
-
-//			} while (BadInput);	
-//		System.out.println("promptUsertoUpdateAddressInfo - address information invalid");
-//		return false;
+			} while (false);	
+		System.out.println("promptUsertoUpdateAddressInfo - address information invalid");
+		return false;
 	}
 	
 	/** Method promptUsertoUpdateAddressInfo updates the user information by prompting the user for the updated address name, 
@@ -159,49 +188,72 @@ public class Address {
 	 */
 	public boolean promptUsertoUpdateAddressInfo(Address oldAddress) {
 //TODO After prompting display address information and re-prompt if the information is incorrect
-//		userCancelled:
-//		do {
+		userCancelled:
+		do {
 			String streetName1 = ConsoleInput.getInputString("Current street number and name: " 
-			+ oldAddress.getAddressStreet1() + "\nPlease enter the address's street number and street name: ");
+			+ oldAddress.getAddressStreet1() + "\nPlease enter the new street number and street name: ");
+			// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+			if (streetName1 == null) {
+				System.out.println("User cancelled");
+				break userCancelled;
+			}
 			streetName1 = streetName1.trim();
 			this.street1 = streetName1;
 			
 			String streetName2 = ConsoleInput.getInputString("Current additional street information: " 
-					+ oldAddress.getAddressStreet2() + "\nPlease enter the address's additional street information "
-					+ "(e.g. Apt#, Building#, Care of, etc.) (Enter - if none): ");
+					+ oldAddress.getAddressStreet2() + "\nPlease enter the new additional street information "
+					+ "(e.g. Apt#, Building#, Care of, etc.) (exit if none): ");
+			// If ConsoleInput return is null, then the user pressed Cancel, set street equal to "".
+			if (streetName2 == null) {
+				System.out.println("Skipping additional street information");
+				streetName2 = "";
+			}
 			streetName2 = streetName2.trim();
 			this.street2 = streetName2;
-			if (streetName2.contains("-")) {
-				this.street2 = "";
-			} else {
-				this.street2 = streetName2;
-			}
 			
 			String city = ConsoleInput.getInputString("Current city: " + oldAddress.getAddressCity() 
-				+ "\nPlease enter the address's city:");
+				+ "\nPlease enter the new city:");
+			// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+			if (city == null) {
+				System.out.println("User cancelled");
+				break userCancelled;
+			}
 			city = city.trim();
 			this.city = city;
 			
 			String state = ConsoleInput.getInputState("Current state abbreviation: " 
 					+ oldAddress.getAddressState() + "\nPlease enter the two characters of a US State, Commonwealth, or Territory \n"
 					+ "(e.g. IL for Illinois):");
-//			// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
-//			if (state == null) {
-//				break userCancelled;
-//			}
+			// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+			if (state == null) {
+				System.out.println("User cancelled");
+				break userCancelled;
+			}
 			this.state = state;
 			
 			Integer zip = ConsoleInput.getInputInt("Current zip code: " 
-					+ oldAddress.getAddressZip() + "\nPlease enter the address's 5 digit zip code:", 5);
+					+ oldAddress.getAddressZip() + "\nPlease enter the new 5 digit zip code:", 5);
+			// If ConsoleInput return is null, then the user pressed Cancel, so break out of the loop.
+			if (zip == null) {
+				System.out.println("User cancelled");
+				break userCancelled;
+			}
 			this.zip = zip;
 			
 			Integer zipPlus4 = ConsoleInput.getInputInt("Current zip code+4: " 
-					+ oldAddress.getAddressZip() + "\nPlease enter the address's 4 digit zip code+4:", 4);
+					+ oldAddress.getAddressZip() + "\nPlease enter the new 4 digit zip code+4:\n"
+							+ "(exit if not known)", 4);
+			// If ConsoleInput return is null, then the user pressed Cancel, so set zipPlus4 to 0.
+			if (zipPlus4 == null) {
+				System.out.println("Skipping zip code+4");
+				zipPlus4 = 0;
+			} 
 			this.zipPlus4 = zipPlus4;
+			
 			return true;
-//		} while (false);	
-//		System.out.println("promptUsertoUpdateAddressInfo - address information invalid");
-//		return false;
+		} while (false);	
+		System.out.println("promptUsertoUpdateAddressInfo - address information invalid");
+		return false;
 	}
 	
 	
@@ -227,8 +279,12 @@ public class Address {
 			System.out.println("isValidAddress - address has no state information.");
 			return false;
 		}
-		if (this.zip == 0 || Long.toString(this.zip).length() != 5) {
+		if (this.zip == 0 || String.format("%05d", this.zip).length() != 5) {
 			System.out.println("isValidAddress - address zip code information is invalid.");
+			return false;
+		}
+		if (this.zipPlus4 != 0 && String.format("%04d", this.zipPlus4).length() == 4) {
+			System.out.println("isValidAddress - address zip code +4 information is invalid.");
 			return false;
 		}
 		return true;
@@ -265,9 +321,10 @@ public class Address {
 		if (!this.street2.isEmpty()) {
 			outputString += " " + this.street2 + " ";
 		}
-		outputString += this.city + ", " + this.state + "  " + this.zip;
+		outputString += this.city + ", " + this.state + "  " + String.format("%05d", this.zip);
+		// Don't include zip+4 if it is set to zero.
 		if (this.zipPlus4 != 0) {
-			outputString += "-" + this.zipPlus4 + " ";
+			outputString += "-" + String.format("%04d", this.zipPlus4) + " ";
 		}
 		return outputString;
 	}

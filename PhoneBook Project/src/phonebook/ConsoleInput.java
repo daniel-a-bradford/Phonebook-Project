@@ -2,6 +2,8 @@ package phonebook;
 
 import java.util.Scanner;
 
+import javax.swing.JOptionPane;
+
 /** This class consists of methods to request input of different types from the user, and validates the input.
  * If the input is invalid, the methods prompt the user for the input again.
  * If the user presses cancel, the methods will return null.
@@ -33,6 +35,8 @@ import java.util.Scanner;
  */
 
 public class ConsoleInput {
+	
+	static StringChecker check = new StringChecker();
 	
 	/** Method getTrimmedUserString provides a class-wide standard way to prompt the user for and get input
 	 *  from the user as a string. Methods in the class will parse the return string to get the input they
@@ -101,26 +105,16 @@ public class ConsoleInput {
 	 * @return Boolean
 	 */
 	public static Boolean getInputBoolean(String userPrompt) {
-		String inputString = "";
-		int userInt = 0;
-		// Build the user prompt string with yes, no, and cancel options.
-		userPrompt += "\nEnter 1 for yes or 2 for no: ";
-		do {
-			// Prompt the user for an input and capture the user input as a string
-			inputString = getTrimmedUserString(userPrompt, true);
-			// Check if the user has cancelled and if so, return null.
-			if (inputString == null) {
-				return null;
-			}
-		// Continue the loop if the string is a valid integer in the range from 1 to 2.
-		// isValidInt will display applicable error messages.
-		} while (!isValidInt(inputString, 1, 2));
-		// User inputString has been validated so parse the string.
-		userInt = Integer.parseInt(inputString); 
-		if (userInt == 1) {
-			return true;
+		// Prompt the user for an input in an Input Dialog box and capture the user input as a string
+		int userInput = JOptionPane.showConfirmDialog(null, userPrompt);
+		// showConfirmDialog returns 0 for clicking Yes, 1 for clicking No, and 2 for clicking Cancel. 
+		if (userInput == 2) {
+			// Set a flag to skip the remainder of the method and return null as a signal to the calling method.
+			return (Boolean)null;
+		} else if (userInput == 1) {
+			return false;
 		} 
-		return false;
+		return true;
 	}
 	
 	/** getInputChoice prompts the user to make a choice based on a numbered list of options from 1 
@@ -171,7 +165,7 @@ public class ConsoleInput {
 		String inputString = "";
 		int userInt = 0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer number:";
 		}	
 		do {
@@ -182,8 +176,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidInt will display applicable error messages.
-		} while (!isValidInt(inputString));
+		// check.isValidInt will display applicable error messages.
+		} while (!check.isValidInt(inputString, false));
 		// User inputString has been validated so parse the string.
 		userInt = Integer.parseInt(inputString); 
 		return userInt;
@@ -212,7 +206,7 @@ public class ConsoleInput {
 		String inputString = "";
 		int userInt = 0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer with " + numDigits + " digits:";
 		}	
 		do {
@@ -223,8 +217,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidInt will display applicable error messages.
-		} while (!isValidInt(inputString, numDigits));
+		// check.isValidInt will display applicable error messages.
+		} while (!check.isValidInt(inputString, numDigits, false));
 		// User inputString has been validated so parse the string.
 		userInt = Integer.parseInt(inputString); 
 		return userInt;
@@ -255,7 +249,7 @@ public class ConsoleInput {
 		String inputString = "";
 		int userInt = 0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer between " + fromThis + " and " + toThis + ":";
 		}
 		do {
@@ -266,8 +260,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidInt will display applicable error messages.
-		} while (!isValidInt(inputString, fromThis, toThis));
+		// check.isValidInt will display applicable error messages.
+		} while (!check.isValidInt(inputString, fromThis, toThis, false));
 		// User inputString has been validated so parse the string.
 		userInt = inputString.charAt(0);
 		return userInt;
@@ -300,118 +294,7 @@ public class ConsoleInput {
 		} while (arrayIndex < userInputInts.length); 
 		return userInputInts;
 	}
-	
-	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @return boolean
-	 */
-	public static boolean isValidInt(String inputString) {
-		return isValidInt(inputString, false);
-	}
-	
-	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidInt(String inputString, boolean silent) {
-		// If inputString is blank, return false
-		if(!isValidString(inputString)) {
-			return false;
-		}
-		// Try to interpret the user input string as an integer and assign it to userInt
-		try {
-			// If parseInt does not throw an exception, the user's input is an integer.
-			int inputInt = Integer.parseInt(inputString);
-		} 
-		// Integer.parseInt will throw a NumberFormatException if the input is not cannot be converted to an integer.
-		catch (NumberFormatException e) {
-			if (!silent) {
-				displayError("Your input was not an integer. \n"
-					+ "Please enter a number without a decimal.\n");
-			}
-			return false;
-		}
-		return true;
-	}
-	
-	/** Method isValidInt tests to see if the inputString can be parsed as an integer with the required
-	 * 	number of digits (numDigits).
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param numDigits
-	 * @return boolean
-	 */
-	public static boolean isValidInt(String inputString, int numDigits) {
-		return isValidInt(inputString, numDigits, false);
-	}
-	
-	/** Method isValidInt tests to see if the inputString can be parsed as an integer with the required
-	 * 	number of digits (numDigits).
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display error messages.
-	 * @param inputString
-	 * @param numDigits
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidInt(String inputString, int numDigits, boolean silent) {
-		// Call isValid to validate type and display applicable error messages if not.
-		if (isValidInt(inputString)) {
-			if (inputString.length() != numDigits) {
-				if (!silent) {
-					displayError("The number does not have exactly " + numDigits + " digits.");	
-				}
-				return false;
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
-	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @return boolean
-	 */
-	public static boolean isValidInt(String inputString, int fromThis, int toThis) {
-		return isValidLong(inputString, fromThis, toThis, false);
-	}
-	
-	/** Method isValidInt tests to see if the inputString can be parsed as an integer.
-	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidInt(String inputString, int fromThis, int toThis, boolean silent) {
-		int inputInt = 0;
-		if (toThis < fromThis) {
-			// Values are reversed so swap them rather than returning false because of invalid parameters.
-			return isValidInt(inputString, toThis, fromThis, silent);
-		}
-		if (isValidInt(inputString, silent)) {
-			inputInt = Integer.parseInt(inputString);
-		}
-		if (inputInt >= fromThis && inputInt <= toThis) {
-			return true;
-		}
-		if (!silent) {
-			displayError("Your input was not between " + fromThis + " and " + toThis + ".");
-		}
-		return false;
-	}
-	
+		
 //Long
 	
 	/** Prompt the user for a single long integer input. Use the default user prompt.
@@ -434,7 +317,7 @@ public class ConsoleInput {
 		String inputString = "";
 		long userLong = 0L;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer number:";
 		}
 		do {
@@ -445,8 +328,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidLong will display applicable error messages.
-		} while (!isValidLong(inputString));
+		// check.isValidLong will display applicable error messages.
+		} while (!check.isValidLong(inputString, false));
 		// User inputString has been validated so parse the string.
 		userLong = Long.parseLong(inputString);
 		return userLong;
@@ -476,7 +359,7 @@ public class ConsoleInput {
 		String inputString = "";
 		long userLong = 0L;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer with " + numDigits + " digits:";
 		}	
 		do {
@@ -487,8 +370,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid long integer.
-		// isValidLong will display applicable error messages.
-		} while (!isValidLong(inputString, numDigits));
+		// check.isValidLong will display applicable error messages.
+		} while (!check.isValidLong(inputString, numDigits, false));
 		// User inputString has been validated so parse the string.
 		userLong = Long.parseLong(inputString);
 		return userLong;
@@ -502,7 +385,7 @@ public class ConsoleInput {
 	 * @param toThis
 	 * @return Long
 	 */
-	public static Long getInputInt(long fromThis, long toThis) {
+	public static Long getInputLong(long fromThis, long toThis) {
 		return getInputLong("", fromThis, toThis);
 	}
 	
@@ -519,7 +402,7 @@ public class ConsoleInput {
 		String inputString = "";
 		long userLong = 0L;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an integer between " + fromThis + " and " + toThis + ":";
 		}
 		do {
@@ -530,10 +413,10 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidLong will display applicable error messages.
-		} while (!isValidLong(inputString, fromThis, toThis));
+		// check.isValidLong will display applicable error messages.
+		} while (!check.isValidLong(inputString, fromThis, toThis, false));
 		// User inputString has been validated so parse the string.
-		userLong = inputString.charAt(0);
+		userLong = Long.parseLong(inputString);
 		return userLong;
 	}
 	
@@ -566,116 +449,6 @@ public class ConsoleInput {
 		return userInputLongs;
 	}
 	
-	/** Method isValidLong tests to see if the inputString can be parsed as a long integer.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @return boolean
-	 */
-	public static boolean isValidLong(String inputString) {
-		return isValidLong(inputString, false);
-	}
-	
-	/** Method isValidLong tests to see if the inputString can be parsed as a long integer.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidLong(String inputString, boolean silent) {
-		// If inputString is blank, return false
-		if(!isValidString(inputString)) {
-			return false;
-		}
-		// Try to interpret the user input string as an integer and assign it to userLong
-		try {
-			// If parseLong does not throw an exception, the user's input is a long integer.
-			long inputLong = Long.parseLong(inputString);
-		} 
-		// Long.parseLong will throw a NumberFormatException if the input is not cannot be converted to an integer.
-		catch (NumberFormatException e) {
-			if (!silent) {
-				displayError("Your input was not an integer. Please enter a number without a decimal.\n");
-			}
-			return false;
-		}
-		return true;
-	}
-	
-	/** Method isValidLong tests to see if the inputString can be parsed as an integer with the required
-	 * 	number of digits (numDigits).
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param numDigits
-	 * @return boolean
-	 */
-	public static boolean isValidLong(String inputString, int numDigits) {
-		return isValidLong(inputString, numDigits, false);
-	}
-	
-	/** Method isValidLong tests to see if the inputString can be parsed as an integer with the required
-	 * 	number of digits (numDigits).
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display error messages.
-	 * @param inputString
-	 * @param numDigits
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidLong(String inputString, int numDigits, boolean silent) {
-		// Call isValid to validate type and display applicable error messages if not.
-		if (isValidLong(inputString)) {
-			if (inputString.length() != numDigits) {
-				if (!silent) {
-					displayError("The number does not have exactly " + numDigits + " digits.");	
-				}
-				return false;
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	/** Method isValidLong tests to see if the inputString can be parsed as a long integer.
-	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @return boolean
-	 */
-	public static boolean isValidLong(String inputString, long fromThis, long toThis) {
-		return isValidLong(inputString, fromThis, toThis, false);
-	}
-	
-	/** Method isValidLong tests to see if the inputString can be parsed as an integer.
-	 * If it can, then it checks if the integer is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidLong(String inputString, long fromThis, long toThis, boolean silent) {
-		long inputLong = 0L;
-		if (toThis < fromThis) {
-			// Values are reversed so swap them rather than returning false because of invalid parameters.
-			return isValidLong(inputString, toThis, fromThis, silent);
-		}
-		if (isValidLong(inputString, silent)) {
-			inputLong = Long.parseLong(inputString);
-		}
-		if (inputLong >= fromThis && inputLong <= toThis) {
-			return true;
-		}
-		if (!silent) {
-			displayError("Your input was not between " + fromThis + " and " + toThis + ".");
-		}
-		return false;
-	}
-
 //Doubles
 
 	/** Prompt the user for a single decimal input. Use the default user prompt.
@@ -698,7 +471,7 @@ public class ConsoleInput {
 		String inputString = "";
 		double userDouble = 0.0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an decimal number:";
 		}	
 		do {
@@ -709,8 +482,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid decimal.
-		// isValidDouble will display applicable error messages.
-		} while (!isValidDouble(inputString));
+		// check.isValidDouble will display applicable error messages.
+		} while (!check.isValidDouble(inputString, false));
 		// User inputString has been validated so parse the string.
 		userDouble = Double.parseDouble(inputString);
 		return userDouble;
@@ -739,7 +512,7 @@ public class ConsoleInput {
 		String inputString = "";
 		double userDouble = 0.0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an decimal with " + numDigits + " digits (not counting the decimal point.):";
 		}	
 		do {
@@ -750,8 +523,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid decimal.
-		// isValidDouble will display applicable error messages.
-		} while (!isValidDouble(inputString, numDigits));
+		// check.isValidDouble will display applicable error messages.
+		} while (!check.isValidDouble(inputString, numDigits, false));
 		// User inputString has been validated so parse the string.
 		userDouble = Double.parseDouble(inputString);
 		return userDouble;
@@ -783,7 +556,7 @@ public class ConsoleInput {
 		String inputString = "";
 		double userDouble = 0.0;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an decimal number between " + fromThis + " and " + toThis + ":";
 		}
 		do {
@@ -794,8 +567,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidDouble will display applicable error messages.
-		} while (!isValidDouble(inputString, fromThis, toThis));
+		// check.isValidDouble will display applicable error messages.
+		} while (!check.isValidDouble(inputString, fromThis, toThis, false));
 		// User inputString has been validated so parse the string.
 		userDouble = inputString.charAt(0);
 		return userDouble;
@@ -814,7 +587,7 @@ public class ConsoleInput {
 		Double currentLong = 0.0;
 		do {
 			// Prompt the user for an input and capture the user input
-			String userPrompt = "Please enter integer #" + (arrayIndex+1) + " of " + numberOfInputs;
+			String userPrompt = "Please enter decimal #" + (arrayIndex+1) + " of " + numberOfInputs;
 			currentLong = getInputDouble(userPrompt);
 			if (currentLong != null) {
 				// User has not cancelled, so store currentInt.
@@ -828,127 +601,7 @@ public class ConsoleInput {
 		} while (arrayIndex < userInputDoubles.length);
 		return userInputDoubles;
 	}
-	
-	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @return boolean
-	 */
-	public static boolean isValidDouble(String inputString) {
-		return isValidDouble(inputString, false);
-	}
-	
-	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidDouble(String inputString, boolean silent) {
-		// If inputString is blank, return false
-		if(!isValidString(inputString)) {
-			return false;
-		}
-		// Try to interpret the user input string as an decimal and assign it to userDouble
-		try {
-			// If parseDouble does not throw an exception, the user's input is an decimal.
-			double inputDouble = Double.parseDouble(inputString);
-		} 
-		// Double.parseDouble will throw a NumberFormatException if the input is not cannot be converted to an decimal.
-		catch (NumberFormatException e) {
-			if (!silent) {
-				displayError("Your input was not an decimal number.\n");
-			}
-			return false;
-		}
-		return true;
-	}
-	
-	/** Method isValidDouble tests to see if the inputString can be parsed as an integer with the required
-	 * 	number of digits (numDigits) excluding the decimal point.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param numDigits
-	 * @return boolean
-	 */
-	public static boolean isValidDouble(String inputString, int numDigits) {
-		return isValidDouble(inputString, numDigits, false);
-	}
-	
-	/** Method isValidDouble tests to see if the inputString can be parsed as an integer with the required
-	 * 	number of digits (numDigits) excluding the decimal point.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display error messages.
-	 * @param inputString
-	 * @param numDigits
-	 * @param silent
-	 * @return boolean
-	 */
-	public static boolean isValidDouble(String inputString, int numDigits, boolean silent) {
-		// Call isValid to validate type and display applicable error messages if not.
-		// .length() - 1 excludes the decimal point from the number of digits.
-		if (isValidDouble(inputString)) {
-			if (inputString.contains(".")) {
-				if (inputString.length() - 1 != numDigits) {
-					if (!silent) {
-						displayError("Excluding the decimal point, the number does not have exactly " 
-								+ numDigits + " digits.");	
-					}
-					return false;
-				}
-			} else if (inputString.length() != numDigits) {
-				if (!silent) {
-					displayError("The number does not have exactly " + numDigits + " digits.");	
-				}
-				return false;
-				
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
-	 * If it can, then it checks if the decimal is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @return boolean
-	 */
-	public static boolean isValidDouble(String inputString, double fromThis, double toThis) {
-		return isValidDouble(inputString, fromThis, toThis, false);
-	}
-	
-	/** Method isValidDouble tests to see if the inputString can be parsed as an decimal.
-	 * If it can, then it checks if the decimal is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @param silent
-	 * @return
-	 */
-	public static boolean isValidDouble(String inputString, double fromThis, double toThis, boolean silent) {
-		double inputDouble = 0.0;
-		if (toThis < fromThis) {
-			// Values are reversed so swap them rather than returning false because of invalid parameters.
-			return isValidDouble(inputString, toThis, fromThis, silent);
-		}
-		if (isValidDouble(inputString, silent)) {
-			inputDouble = Double.parseDouble(inputString);
-		}
-		if (inputDouble >= fromThis && inputDouble <= toThis) {
-			return true;
-		}
-		if (!silent) {
-			displayError("Your input was not between " + fromThis + " and " + toThis + ".");
-		}
-		return false;
-	}
-	
+		
 //Character
 	
 	/** Prompt the user for a single character input. Use the default prompt text.
@@ -971,7 +624,7 @@ public class ConsoleInput {
 		String inputString = "";
 		char userChar = 'a';
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter a character:\n (will only take the first character)";
 		}
 		do {
@@ -982,8 +635,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidChar will display applicable error messages.
-		} while (!isValidChar(inputString));
+		// check.isValidChar will display applicable error messages.
+		} while (!check.isValidChar(inputString, false));
 		// User inputString has been validated so parse the string.
 		userChar = inputString.charAt(0);
 		return userChar;
@@ -1014,7 +667,7 @@ public class ConsoleInput {
 		String inputString = "";
 		char userChar = 'a';
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter a character between " + fromThis + " and " + toThis + ":"
 					+ "\n (will only take the first character)";
 		}
@@ -1026,8 +679,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidChar will display applicable error messages.
-		} while (!isValidChar(inputString, fromThis, toThis));
+		// check.isValidChar will display applicable error messages.
+		} while (!check.isValidChar(inputString, fromThis, toThis, false));
 		// User inputString has been validated so parse the string.
 		userChar = inputString.charAt(0);
 		return userChar;
@@ -1054,7 +707,7 @@ public class ConsoleInput {
 		char userChar = 'a';
 		boolean validChar = false;
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter a letter (will only take the first character):";
 		}
 		do {
@@ -1064,7 +717,7 @@ public class ConsoleInput {
 			if (inputString == null) {
 				return null;
 			}
-			validChar = isValidChar(inputString);
+			validChar = check.isValidChar(inputString, false);
 			if (validChar) {
 				 if (!Character.isLetter(inputString.charAt(0))) {
 					displayError(inputString.charAt(0) + " is not a letter. \n"
@@ -1073,79 +726,11 @@ public class ConsoleInput {
 				 }
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidChar will display applicable error messages.
+		// check.isValidChar will display applicable error messages.
 		} while (!validChar);
 		// User inputString has been validated so parse the string.
 		userChar = inputString.charAt(0);
 		return userChar;
-	}
-	
-	/** Method isValidChar tests to see if the inputString not is empty or blank.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @return boolean
-	 */
-	public static boolean isValidChar(String inputString) {
-		return isValidChar(inputString, false);
-	}
-	
-	/** Method isValidChar tests to see if the inputString is not empty or blank.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param silent
-	 * @return
-	 */
-	public static boolean isValidChar(String inputString, boolean silent) {
-		// If the input string is blank or empty advise the user (if not silent) and return false.
-		if (inputString.isBlank() || inputString.isEmpty()) {
-			if (!silent) {
-				displayError("You did not provide an input.\n");
-			}
-			return false;
-		}
-		return true;
-	}
-	
-	/** Method isValidChar tests to see if the inputString is not empty or blank.
-	 * If it can, then it checks if the character is between fromThis and toThis inclusively
-	 * using the ASCII values.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @return
-	 */
-	public static boolean isValidChar(String inputString, char fromThis, char toThis) {
-		return isValidChar(inputString, fromThis, toThis, false);
-	}
-	
-	/** Method isValidChar tests to see if the inputString can be parsed as an decimal.
-	 * If it can, then it checks if the decimal is between fromThis and toThis inclusively.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param fromThis
-	 * @param toThis
-	 * @param silent
-	 * @return
-	 */
-	public static boolean isValidChar(String inputString, char fromThis, char toThis, boolean silent) {
-		char inputChar = 'a';
-		if (toThis < fromThis) {
-			// Values are reversed so swap them rather than returning false because of invalid parameters.
-			return isValidChar(inputString, toThis, fromThis, silent);
-		}
-		if (isValidChar(inputString)) {
-			inputChar = inputString.charAt(0);
-		}
-		if (inputChar >= fromThis && inputChar <= toThis) {
-			return true;
-		}
-		if (!silent) {
-			displayError("Your input was not between " + fromThis + " and " + toThis + ".");
-		}
-		return false;
 	}
 	
 //String
@@ -1168,7 +753,7 @@ public class ConsoleInput {
 	public static String getInputString(String userPrompt) {
 		String inputString = "";
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an string of characters:";
 		}
 		do {
@@ -1179,8 +764,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid integer.
-		// isValidString will display applicable error messages.
-		} while (!isValidString(inputString));
+		// check.isValidString will display applicable error messages.
+		} while (!check.isValidString(inputString, false));
 		return inputString;
 	}
 	
@@ -1204,7 +789,7 @@ public class ConsoleInput {
 	public static String getInputString(String userPrompt, int numChars) {
 		String inputString = "";
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter an string of " + numChars + " characters:";
 		}
 		do {
@@ -1215,8 +800,8 @@ public class ConsoleInput {
 				return null;
 			}
 		// Continue the loop if the string is a valid string.
-		// isValidString will display applicable error messages.
-		} while (!isValidString(inputString, numChars));
+		// check.isValidString will display applicable error messages.
+		} while (!check.isValidString(inputString, numChars, false));
 		return inputString;
 	}
 	
@@ -1263,63 +848,6 @@ public class ConsoleInput {
 		return userInputArray;
 	}
 	
-	/** Method isValidString tests to see if the inputString not is empty or blank.
-	 * If so, it returns true, otherwise false.
-	 * @param inputString
-	 * @return
-	 */
-	public static boolean isValidString(String inputString) {
-		return isValidString(inputString, false);
-	}
-	
-	/** Method isValidString tests to see if the inputString is not empty or blank.
-	 * If so, it returns true, otherwise false.
-	 * If silent is true, then do not display an error message.
-	 * @param inputString
-	 * @param silent
-	 * @return
-	 */
-	public static boolean isValidString(String inputString, boolean silent) {
-		// If the input string is blank or empty advise the user (if not silent) and return false.
-		if (inputString.isBlank() || inputString.isEmpty()) {
-			if (!silent) {
-				displayError("You did not provide an input.\n");
-			}
-			return false;
-		}
-		return true;
-	}
-	
-	/** Method isValidString tests to see if the inputString is not empty or blank. If so, it checks to
-	 *  see if the length of the string is numChars and returns true, otherwise returns false.
-	 * @param inputString
-	 * @param numChars
-	 * @param silent
-	 * @return
-	 */
-	public static boolean isValidString(String inputString, int numChars) {
-		return isValidString(inputString, numChars, false);
-	}
-	
-	/** Method isValidString tests to see if the inputString is not empty or blank. If so, it checks to
-	 *  see if the length of the string is numChars and returns true, otherwise returns false.
-	 * If silent is true, then do not display error messages.
-	 * @param inputString
-	 * @param numChars
-	 * @param silent
-	 * @return
-	 */
-	public static boolean isValidString(String inputString, int numChars, boolean silent) {
-		// Call isValid to validate type and display applicable error messages if not.
-		if (isValidString(inputString) && inputString.length() != numChars) {
-			if(!silent) {
-				displayError("The string does not have exactly " + numChars + " characters.");
-				return false;
-			}
-		}
-		return true;
-	}
-	
 	/** Prompt the user for a string input representing a two letter US state, commonwealth, or territory 
 	 * abbreviation. Use the default prompt string.
 	 * Validate the input is not empty, advise and re-prompt the user.
@@ -1341,7 +869,7 @@ public class ConsoleInput {
 	 */
 	public static String getInputState(String userPrompt) {
 		// Check if the user prompt text is empty or blank and use the default prompt if it is.
-		if (!isValidString(userPrompt, true)) {
+		if (!check.isValidString(userPrompt)) {
 			userPrompt = "Please enter the two characters of a US State, Commonwealth, or Territory \n"
 					+ "(e.g. IL for Illinois):";
 		}
@@ -1359,9 +887,9 @@ public class ConsoleInput {
 			inputString = inputString.toUpperCase();
 			// Check if the user did not put anything in. 
 			// If so prompt again, if not assign userChar to the first character in the string.
-			if 	(isValidString(inputString)) {
+			if 	(check.isValidString(inputString, false)) {
 				// Check if the user input is a valid US state, commonwealth or territory abbreviation.
-				if (isStateAbbreviation(inputString)) {
+				if (check.isStateAbbreviation(inputString)) {
 					notAState = false;
 				} else {
 					// Advise the user the input is not a state and continue the loop
@@ -1373,30 +901,9 @@ public class ConsoleInput {
 				// Advise the user the input is invalid and continue the loop
 				displayError("You did not provide an input. \nPlease try again.");
 			}
-		} while (!isValidString(inputString) || notAState);
+		} while (!check.isValidString(inputString, false) || notAState);
 		//input.close();
 		return inputString;
 	}
 	
-	/** Method isStateAbbreviation returns true if the input String represents a two letter US state, 
-	 * commonwealth, or territory. Otherwise it returns false.
-	 * */
-	private static boolean isStateAbbreviation(String inputString) {
-		String[] abbreviationArray = {"AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL",
-				"IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
-				"NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA",
-				"WV","WI","WY","AS","DC","FM","GU","MH","MP","PW","PR","VI"};
-		// Remove all white space from the userInput
-		inputString = inputString.replaceAll("\\s", "");
-		// Convert the inputString to all upper case before comparing to the abbreviationArray Strings.
-		inputString = inputString.toUpperCase();
-		//displayError("isStateAbbreviation - searching for " + inputString);
-		for (int index = 0; index < abbreviationArray.length; index++) {
-			//displayError("isStateAbbreviation - comparing to " + abbreviationArray[index]);
-			if (inputString.contentEquals(abbreviationArray[index])) {
-				return true;
-			}
-		}
-		return false;
-	}
 }
